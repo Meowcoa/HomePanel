@@ -101,7 +101,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $workspaceRoot = $env:HOMEPANEL_WORKSPACE_ROOT
           $releaseDirectory = Join-Path $workspaceRoot "work\HomePanel-release-$env:HOME_PANEL_VERSION"
-          $artifactDirectory = Join-Path $workspaceRoot 'release-output'
+          $artifactDirectory = Join-Path $env:GITHUB_WORKSPACE 'release-output'
           New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
           Get-Item -LiteralPath (Join-Path $releaseDirectory "HomePanel-Setup-$env:HOME_PANEL_VERSION.exe"),(Join-Path $releaseDirectory 'HomePanel.exe') | ForEach-Object {
             $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -112,7 +112,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: HomePanel-Windows-x64
-          path: ${{ github.workspace }}/../../release-output/*
+          path: ${{ github.workspace }}/release-output/*
           if-no-files-found: error
   draft-release:
     if: startsWith(github.ref, 'refs/tags/v')
