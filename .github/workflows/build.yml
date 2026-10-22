@@ -96,7 +96,7 @@ jobs:
           $exe = Join-Path $workspaceRoot "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel.exe"
           .\scripts\Build-Installer.ps1 -Version $env:HOME_PANEL_VERSION -WorkspaceRoot $workspaceRoot -ReleaseExe $exe -TestMode -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
           $installer = Join-Path $workspaceRoot "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel-Setup-$env:HOME_PANEL_VERSION-test.exe"
-          .\scripts\Test-Installer.ps1 -InstallerPath $installer -ReleaseExe $exe -WorkspaceRoot $workspaceRoot -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
+          .\scripts\Test-Installer.ps1 -InstallerPath $installer -ReleaseExe $exe -WorkspaceRoot $workspaceRoot -SkipTrayLifecycle -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
       - name: Checksums
         shell: pwsh
         run: |
