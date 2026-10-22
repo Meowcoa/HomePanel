@@ -100,7 +100,11 @@ impl HomePanelApp {
         for (key,label,value,max) in [("volume","音量",state.volume.map(|v|v as f64),100.0),("position","播放进度",state.projected_position().map(|v|v as f64),state.duration_ms.unwrap_or(0) as f64)] {
             let draft_key=format!("mina:{}:{key}",device.id);
             let mut shown=self.control_drafts.get(&draft_key).and_then(Value::as_f64).or(value).unwrap_or(0.0);
-            let (rect,_)=ui.allocate_exact_size(Vec2::new(ui.available_width(),88.),Sense::hover());design::control_surface(ui.painter(),rect,self.dark,self.material());
+            let card_height=88.0;
+            let fully_visible=ui.clip_rect().bottom()-ui.cursor().min.y>=card_height;
+            let (rect,_)=ui.allocate_exact_size(Vec2::new(ui.available_width(),card_height),Sense::hover());
+            if !fully_visible {continue;}
+            design::control_surface(ui.painter(),rect,self.dark,self.material());
             design::text(ui.painter(),rect.min+egui::vec2(14.,10.),label,11.5,design::ink(self.dark),100.);
             let display=if state.at==0&&value.is_none(){"正在读取…".into()}else if value.is_none() || max<=0. {"此音源暂未提供".into()}else if key=="volume"{format!("{}{}%",if state.current(){""}else{"上次 "},shown.round())}else{format!("{}{} / {}",if state.current(){""}else{"上次 "},clock_ms(shown as u64),clock_ms(max as u64))};
             ui.painter().text(rect.right_top()+egui::vec2(-14.,16.),Align2::RIGHT_CENTER,display,egui::FontId::proportional(10.5),muted(self.dark));
