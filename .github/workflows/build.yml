@@ -16,7 +16,7 @@ jobs:
   windows:
     runs-on: windows-latest
     env:
-      CARGO_TARGET_DIR: ${{ github.workspace }}/../work/cargo-target
+      CARGO_TARGET_DIR: ${{ github.workspace }}/../../work/cargo-target
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -30,7 +30,7 @@ jobs:
           $version = (($metadata | ConvertFrom-Json).packages | Where-Object name -eq 'homepanel').version
           if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid application version' }
           if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -cne "v$version") { throw 'Release tag does not match Cargo version' }
-          $workspaceRoot = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE '..'))
+          $workspaceRoot = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE '..\..'))
           "HOMEPANEL_WORKSPACE_ROOT=$workspaceRoot" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8NoBOM
           "HOME_PANEL_VERSION=$version" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8NoBOM
       - name: Test and build native application
@@ -112,7 +112,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: HomePanel-Windows-x64
-          path: ${{ github.workspace }}/../release-output/*
+          path: ${{ github.workspace }}/../../release-output/*
           if-no-files-found: error
   draft-release:
     if: startsWith(github.ref, 'refs/tags/v')
