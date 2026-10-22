@@ -41,6 +41,8 @@ jobs:
           New-Item -ItemType Directory -Path (Join-Path $workspaceRoot 'work') -Force | Out-Null
           cargo test --locked --manifest-path src-tauri/Cargo.toml
           if ($LASTEXITCODE -ne 0) { throw "cargo test failed with exit code $LASTEXITCODE" }
+          cargo build --locked --manifest-path src-tauri/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { throw "Debug cargo build failed with exit code $LASTEXITCODE" }
           .\scripts\Build-Portable.ps1 -WorkspaceRoot $workspaceRoot
           .\scripts\Test-Portable.ps1 -WorkspaceRoot $workspaceRoot
       - name: Prepare NSIS 3.13
