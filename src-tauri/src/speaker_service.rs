@@ -584,14 +584,20 @@ fn parse_ubus(data:&Value)->Result<Value,String> {
         _=>Err("音箱状态格式无效".into()),
     }
 }
+fn number_i64(value:&Value)->Option<i64> {
+    value.as_i64().or_else(||value.as_str().and_then(|text|text.trim().parse::<i64>().ok()))
+}
+fn number_u64(value:&Value)->Option<u64> {
+    value.as_u64().or_else(||value.as_str().and_then(|text|text.trim().parse::<u64>().ok()))
+}
 fn parse_player(value:&Value)->Result<Snapshot,String> {
-    let status=value["status"].as_i64().ok_or("音箱未提供播放状态")?;
+    let status=number_i64(&value["status"]).ok_or("音箱未提供播放状态")?;
     let detail=&value["play_song_detail"];
     let text=|key:&str|detail[key].as_str().unwrap_or_default().chars().take(180).collect();
     let positive_id=|key:&str|detail[key].as_i64().or_else(||detail[key].as_str().and_then(|text|text.parse::<i64>().ok())).filter(|value|*value>0).map(|value|value as u64);
-    Ok(Snapshot{at:now_ms(),player_at:now_ms(),track_audio:positive_id("audio_id"),track_global:positive_id("global_id"),status:Some(status),volume:value["volume"].as_u64().filter(|v|*v<=100).map(|v|v as u8),
-        title:text("title"),artist:text("artist"),loop_type:value["loop_type"].as_u64().filter(|v|*v<=3).map(|v|v as u8),
-        duration_ms:detail["duration"].as_u64().filter(|v|*v>0),position_ms:detail["position"].as_u64(),..Default::default()})
+    Ok(Snapshot{at:now_ms(),player_at:now_ms(),track_audio:positive_id("audio_id"),track_global:positive_id("global_id"),status:Some(status),volume:number_u64(&value["volume"]).filter(|v|*v<=100).map(|v|v as u8),
+        title:text("title"),artist:text("artist"),loop_type:number_u64(&value["loop_type"]).filter(|v|*v<=3).map(|v|v as u8),
+        duration_ms:number_u64(&detail["duration"]).filter(|v|*v>0),position_ms:number_u64(&detail["position"]),..Default::default()})
 }
 
 #[cfg(test)]
