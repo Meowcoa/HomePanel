@@ -2,11 +2,23 @@
 use crate::{cloud::Cloud, model::Device, now_ms};
 use rand::{distributions::Alphanumeric, Rng};
 use serde_json::{json, Value};
-use std::{collections::HashMap, sync::{Arc,atomic::Ordering}, time::Duration};
+use std::{collections::HashMap, future::Future, sync::{Arc,atomic::Ordering}, task::Poll, time::Duration};
 use tokio::sync::Mutex;
 
 const BASE: &str = "https://api2.mina.xiaoaisound.com";
 pub fn eligible(device:&Device)->bool {device.kind=="speaker" && device.model.starts_with("xiaomi.wifispeaker.")}
+
+async fn join_three<A,B,C>(a:A,b:B,c:C)->(A::Output,B::Output,C::Output)
+where A:Future, B:Future, C:Future {
+    let mut a=Box::pin(a);let mut b=Box::pin(b);let mut c=Box::pin(c);
+    let mut ra=None;let mut rb=None;let mut rc=None;
+    std::future::poll_fn(|cx|{
+        if ra.is_none(){if let Poll::Ready(value)=a.as_mut().poll(cx){ra=Some(value);}}
+        if rb.is_none(){if let Poll::Ready(value)=b.as_mut().poll(cx){rb=Some(value);}}
+        if rc.is_none(){if let Poll::Ready(value)=c.as_mut().poll(cx){rc=Some(value);}}
+        if ra.is_some()&&rb.is_some()&&rc.is_some(){Poll::Ready((ra.take().unwrap(),rb.take().unwrap(),rc.take().unwrap()))}else{Poll::Pending}
+    }).await
+}
 
 #[derive(Clone, Default)]
 pub struct Snapshot {
@@ -34,12 +46,34 @@ impl Snapshot {
         }else{position})
     }
     pub fn retain_last(mut self,previous:&Self)->Self {
-        if self.player_at==0 {
+        let had_player=self.player_at!=0;
+        if !had_player {
             self.status=previous.status;self.volume=previous.volume;self.title=previous.title.clone();self.artist=previous.artist.clone();
             self.duration_ms=previous.duration_ms;self.position_ms=previous.position_ms;self.loop_type=previous.loop_type;self.track_audio=previous.track_audio;self.track_global=previous.track_global;
         }
         if self.sleep_at==0 {self.sleeping=previous.sleeping;}
         if self.bluetooth_at==0 {self.bluetooth=previous.bluetooth;}
+        if had_player && self.status==Some(1) && previous.status==Some(1) {
+            let same_track=if let (Some(current),Some(old))=(self.track_audio,previous.track_audio) {
+                current==old
+            } else if let (Some(current),Some(old))=(self.track_global,previous.track_global) {
+                current==old
+            } else {
+                !self.title.is_empty() && self.title==previous.title
+            };
+            if same_track {
+                let old_position=previous.projected_position().or(previous.position_ms);
+                if let (Some(old_position),Some(new_position))=(old_position,self.position_ms) {
+                    // A stale server read must not pull a smoothly advancing
+                    // slider backwards. Pauses, seeks and track changes reset
+                    // the anchor through their changed status or identity.
+                    if new_position.saturating_add(2_000)<old_position {
+                        self.position_ms=Some(old_position.min(self.duration_ms.unwrap_or(u64::MAX)));
+                        self.player_at=now_ms();
+                    }
+                }
+            }
+        }
         self
     }
     pub fn read_failure(previous:&Self,error:String)->Self {
@@ -296,13 +330,17 @@ impl Service {
         Err(errors.join("；"))
     }
     async fn state(&self,main:&Cloud,target:&Target,device:&Device)->Result<Snapshot,String> {
-        let mut state=match self.player_value(main,target).await.and_then(|value|parse_player(&value)) {
+        let player=self.player_value(main,target);
+        let sleep=self.read_sleep(main,target);
+        let bluetooth=self.read_bluetooth(main,target);
+        let (player,sleep,bluetooth)=join_three(player,sleep,bluetooth).await;
+        let mut state=match player.and_then(|value|parse_player(&value)) {
             Ok(state)=>state,Err(error)=>Snapshot{error:Some(format!("播放读取：{error}")),..Default::default()},
         };
-        // Optional firmware features must not consume the player request deadline.
-        // Bound each to two seconds; unsupported or stalled replies remain unknown.
-        match self.read_sleep(main,target).await {Ok(value)=>{state.sleeping=Some(value);state.sleep_at=now_ms();},Err(error)=>state.sleep_error=Some(error)}
-        match self.read_bluetooth(main,target).await {Ok(value)=>{state.bluetooth=Some(value);state.bluetooth_at=now_ms();},Err(error)=>state.bluetooth_error=Some(error)}
+        // Optional firmware features run in parallel and never serialize the
+        // player/song path. Unsupported or stalled replies remain unknown.
+        match sleep {Ok(value)=>{state.sleeping=Some(value);state.sleep_at=now_ms();},Err(error)=>state.sleep_error=Some(error)}
+        match bluetooth {Ok(value)=>{state.bluetooth=Some(value);state.bluetooth_at=now_ms();},Err(error)=>state.bluetooth_error=Some(error)}
         state.adapter=PhoneAdapter::resolve(device,target);
         state.online=target.online;
         state.at=now_ms();Ok(state)
@@ -722,6 +760,14 @@ mod tests {
     #[test] fn optional_read_failures_do_not_block_loop_confirmation_and_missing_capability_never_writes() {
         assert_eq!(exercise_phone_control(Command::Loop(3),true,true,false).unwrap().loop_type,Some(3));
         assert!(exercise_phone_control(Command::Sleep(true),true,false,true).err().unwrap().contains("睡眠控制能力"));
+    }
+    #[test] fn stale_live_progress_reads_do_not_pull_the_projected_position_backwards() {
+        let previous=Snapshot{player_at:now_ms().saturating_sub(2_000),status:Some(1),track_audio:Some(101),duration_ms:Some(120_000),position_ms:Some(30_000),..Default::default()};
+        let projected=previous.projected_position().unwrap();
+        let current=Snapshot{player_at:now_ms(),status:Some(1),track_audio:Some(101),duration_ms:Some(120_000),position_ms:Some(27_000),..Default::default()};
+        let merged=current.retain_last(&previous);
+        assert!(merged.position_ms.unwrap_or(0)>=projected.saturating_sub(100));
+        assert_eq!(merged.track_audio,Some(101));
     }
     #[test] fn accepted_but_unchanged_private_write_is_uncertain_and_sent_once() {
         let error=exercise_phone_control(Command::Bluetooth(true),false,false,false).err().unwrap();assert!(error.starts_with("UNCERTAIN:"));
