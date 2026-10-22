@@ -68,6 +68,18 @@ fn assert_no_pending(root: &Path) {
         "failed/cancelled downloads must release and remove only their temporary file");
 }
 
+fn read_line_before(reader: &mut BufReader<std::net::TcpStream>, line: &mut String, deadline: Instant) {
+    loop {
+        match reader.read_line(line) {
+            Ok(0) => panic!("loopback fixture request ended before its headers"),
+            Ok(_) => return,
+            Err(error) if matches!(error.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut)
+                && Instant::now() < deadline => std::thread::sleep(Duration::from_millis(5)),
+            Err(error) => panic!("loopback fixture could not read request headers: {error}"),
+        }
+    }
+}
+
 fn server(raw: Vec<u8>, delay_close: Duration) -> (String, JoinHandle<String>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     listener.set_nonblocking(true).unwrap();
@@ -84,10 +96,10 @@ fn server(raw: Vec<u8>, delay_close: Duration) -> (String, JoinHandle<String>) {
         stream.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
         let mut reader = BufReader::new(stream.try_clone().unwrap());
         let mut request = String::new();
+        let request_deadline = Instant::now()+Duration::from_secs(5);
         loop {
             let mut line = String::new();
-            reader.read_line(&mut line).unwrap();
-            assert!(!line.is_empty());
+            read_line_before(&mut reader,&mut line,request_deadline);
             request.push_str(&line);
             if line=="\r\n" {break;}
             assert!(request.len()<16384);
