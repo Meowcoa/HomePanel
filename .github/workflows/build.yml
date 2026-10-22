@@ -16,7 +16,7 @@ jobs:
   windows:
     runs-on: windows-latest
     env:
-      CARGO_TARGET_DIR: ${{ github.workspace }}/work/cargo-target
+      CARGO_TARGET_DIR: ${{ github.workspace }}/../work/cargo-target
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -30,16 +30,19 @@ jobs:
           $version = (($metadata | ConvertFrom-Json).packages | Where-Object name -eq 'homepanel').version
           if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid application version' }
           if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -cne "v$version") { throw 'Release tag does not match Cargo version' }
+          $workspaceRoot = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE '..'))
+          "HOMEPANEL_WORKSPACE_ROOT=$workspaceRoot" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8NoBOM
           "HOME_PANEL_VERSION=$version" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8NoBOM
       - name: Test and build native application
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          New-Item -ItemType Directory -Path (Join-Path $env:GITHUB_WORKSPACE 'work') -Force | Out-Null
+          $workspaceRoot = $env:HOMEPANEL_WORKSPACE_ROOT
+          New-Item -ItemType Directory -Path (Join-Path $workspaceRoot 'work') -Force | Out-Null
           cargo test --locked --manifest-path src-tauri/Cargo.toml
           if ($LASTEXITCODE -ne 0) { throw "cargo test failed with exit code $LASTEXITCODE" }
-          .\scripts\Build-Portable.ps1 -WorkspaceRoot $env:GITHUB_WORKSPACE
-          .\scripts\Test-Portable.ps1 -WorkspaceRoot $env:GITHUB_WORKSPACE
+          .\scripts\Build-Portable.ps1 -WorkspaceRoot $workspaceRoot
+          .\scripts\Test-Portable.ps1 -WorkspaceRoot $workspaceRoot
       - name: Prepare NSIS 3.13
         shell: pwsh
         run: |
@@ -62,39 +65,43 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          $workspaceRoot = $env:HOMEPANEL_WORKSPACE_ROOT
           Push-Location experiments/rnw-host
           try {
             npm ci --ignore-scripts --no-audit --no-fund
             if ($LASTEXITCODE -ne 0) {throw 'Host dependency install failed'}
             node --test
             if ($LASTEXITCODE -ne 0) {throw 'Host bridge regressions failed'}
-            ./Build-Host.ps1 -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'work/rnw-output')
-            node node_modules/@react-native-community/cli/build/bin.js bundle --platform windows --dev false --entry-file index.js --bundle-output (Join-Path $env:GITHUB_WORKSPACE 'work/host-license-map.js') --sourcemap-output (Join-Path $env:GITHUB_WORKSPACE 'work/host-license-map.json') --max-workers 2
+            ./Build-Host.ps1 -OutputDirectory (Join-Path $workspaceRoot 'work/rnw-output')
+            node node_modules/@react-native-community/cli/build/bin.js bundle --platform windows --dev false --entry-file index.js --bundle-output (Join-Path $workspaceRoot 'work/host-license-map.js') --sourcemap-output (Join-Path $workspaceRoot 'work/host-license-map.json') --max-workers 2
             if ($LASTEXITCODE -ne 0) {throw 'Host source-map generation failed'}
           } finally {Pop-Location}
-          ./scripts/Prepare-VcRuntime.ps1 -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'work/vc-runtime')
-          ./scripts/Stage-PluginHost.ps1 -NativeOutput (Join-Path $env:GITHUB_WORKSPACE 'work/rnw-output') -VcRuntimeDirectory (Join-Path $env:GITHUB_WORKSPACE 'work/vc-runtime/redistributable-x64') -VcLicense (Join-Path $env:GITHUB_WORKSPACE 'work/vc-runtime/license.rtf') -NuGetPackages (Join-Path $env:USERPROFILE '.nuget/packages') -HostNodeModules (Join-Path $env:GITHUB_WORKSPACE 'experiments/rnw-host/node_modules') -BundleSourceMap (Join-Path $env:GITHUB_WORKSPACE 'work/host-license-map.json') -Destination (Join-Path $env:GITHUB_WORKSPACE 'work/host-payload')
-          "HOME_PANEL_HOST_PAYLOAD=$(Join-Path $env:GITHUB_WORKSPACE 'work/host-payload')" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8NoBOM
+          ./scripts/Prepare-VcRuntime.ps1 -OutputDirectory (Join-Path $workspaceRoot 'work/vc-runtime')
+          ./scripts/Stage-PluginHost.ps1 -NativeOutput (Join-Path $workspaceRoot 'work/rnw-output') -VcRuntimeDirectory (Join-Path $workspaceRoot 'work/vc-runtime/redistributable-x64') -VcLicense (Join-Path $workspaceRoot 'work/vc-runtime/license.rtf') -NuGetPackages (Join-Path $env:USERPROFILE '.nuget/packages') -HostNodeModules (Join-Path $env:GITHUB_WORKSPACE 'experiments/rnw-host/node_modules') -BundleSourceMap (Join-Path $workspaceRoot 'work/host-license-map.json') -Destination (Join-Path $workspaceRoot 'work/host-payload')
+          "HOME_PANEL_HOST_PAYLOAD=$(Join-Path $workspaceRoot 'work/host-payload')" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8NoBOM
       - name: Create native installer
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $exe = Join-Path $env:GITHUB_WORKSPACE "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel.exe"
-          .\scripts\Build-Installer.ps1 -Version $env:HOME_PANEL_VERSION -WorkspaceRoot $env:GITHUB_WORKSPACE -ReleaseExe $exe -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
+          $workspaceRoot = $env:HOMEPANEL_WORKSPACE_ROOT
+          $exe = Join-Path $workspaceRoot "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel.exe"
+          .\scripts\Build-Installer.ps1 -Version $env:HOME_PANEL_VERSION -WorkspaceRoot $workspaceRoot -ReleaseExe $exe -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
       - name: Test locked-file installation and upgrade
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $exe = Join-Path $env:GITHUB_WORKSPACE "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel.exe"
-          .\scripts\Build-Installer.ps1 -Version $env:HOME_PANEL_VERSION -WorkspaceRoot $env:GITHUB_WORKSPACE -ReleaseExe $exe -TestMode -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
-          $installer = Join-Path $env:GITHUB_WORKSPACE "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel-Setup-$env:HOME_PANEL_VERSION-test.exe"
-          .\scripts\Test-Installer.ps1 -InstallerPath $installer -ReleaseExe $exe -WorkspaceRoot $env:GITHUB_WORKSPACE -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
+          $workspaceRoot = $env:HOMEPANEL_WORKSPACE_ROOT
+          $exe = Join-Path $workspaceRoot "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel.exe"
+          .\scripts\Build-Installer.ps1 -Version $env:HOME_PANEL_VERSION -WorkspaceRoot $workspaceRoot -ReleaseExe $exe -TestMode -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
+          $installer = Join-Path $workspaceRoot "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel-Setup-$env:HOME_PANEL_VERSION-test.exe"
+          .\scripts\Test-Installer.ps1 -InstallerPath $installer -ReleaseExe $exe -WorkspaceRoot $workspaceRoot -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
       - name: Checksums
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $releaseDirectory = Join-Path $env:GITHUB_WORKSPACE "work\HomePanel-release-$env:HOME_PANEL_VERSION"
-          $artifactDirectory = Join-Path $env:GITHUB_WORKSPACE 'release-output'
+          $workspaceRoot = $env:HOMEPANEL_WORKSPACE_ROOT
+          $releaseDirectory = Join-Path $workspaceRoot "work\HomePanel-release-$env:HOME_PANEL_VERSION"
+          $artifactDirectory = Join-Path $workspaceRoot 'release-output'
           New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
           Get-Item -LiteralPath (Join-Path $releaseDirectory "HomePanel-Setup-$env:HOME_PANEL_VERSION.exe"),(Join-Path $releaseDirectory 'HomePanel.exe') | ForEach-Object {
             $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -105,7 +112,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: HomePanel-Windows-x64
-          path: release-output/*
+          path: ${{ github.workspace }}/../release-output/*
           if-no-files-found: error
   draft-release:
     if: startsWith(github.ref, 'refs/tags/v')
