@@ -282,8 +282,21 @@ impl Service {
             ("deviceId",target.id.clone()),("path",path.into()),("method",method.into()),("message",message.to_string())])).await?;
         parse_ubus(&data)
     }
+    async fn player_value(&self,main:&Cloud,target:&Target)->Result<Value,String> {
+        let mut errors=Vec::new();
+        // MiNA deployments differ on the media namespace used for reads.
+        // Keep this fallback read-only; writes still use one exact contract.
+        for media in ["app_ios","app_android"] {
+            match self.ubus(main,target,"mediaplayer","player_get_play_status",json!({"media":media})).await {
+                Ok(value) if parse_player(&value).is_ok() => return Ok(value),
+                Ok(_) => errors.push(format!("{media}: 音箱状态格式无效")),
+                Err(error) => errors.push(format!("{media}: {error}")),
+            }
+        }
+        Err(errors.join("；"))
+    }
     async fn state(&self,main:&Cloud,target:&Target,device:&Device)->Result<Snapshot,String> {
-        let mut state=match self.ubus(main,target,"mediaplayer","player_get_play_status",json!({})).await.and_then(|value|parse_player(&value)) {
+        let mut state=match self.player_value(main,target).await.and_then(|value|parse_player(&value)) {
             Ok(state)=>state,Err(error)=>Snapshot{error:Some(format!("播放读取：{error}")),..Default::default()},
         };
         // Optional firmware features must not consume the player request deadline.
@@ -312,7 +325,7 @@ impl Service {
             Command::Sleep(_)=>{after.sleeping=Some(self.read_sleep(main,target).await?);after.sleep_error=None;after.sleep_at=now_ms();},
             Command::Bluetooth(_)=>{after.bluetooth=Some(self.read_bluetooth(main,target).await?);after.bluetooth_error=None;after.bluetooth_at=now_ms();},
             _=>{
-                let player=self.ubus(main,target,"mediaplayer","player_get_play_status",json!({})).await?;
+                let player=self.player_value(main,target).await?;
                 let state=parse_player(&player)?;
                 after.status=state.status;after.volume=state.volume;after.title=state.title;after.artist=state.artist;
                 after.duration_ms=state.duration_ms;after.position_ms=state.position_ms;after.loop_type=state.loop_type;
@@ -359,8 +372,12 @@ impl Service {
         let Some((target,capabilities_present))=target else{steps.push(Step::new(Stage::Target,Code::Unavailable));return steps;};
         let valid_fields=[&target.id,&target.sn,&target.hardware,&target.profile].iter().all(|value|!value.contains([';','\r','\n']));
         steps.push(Step::new(Stage::Target,Code::Ok).flag(Flag::TargetMatched,true).flag(Flag::TargetFieldsValid,valid_fields).flag(Flag::HardwareRecognized,hardware_screen(&target.hardware).is_some()).flag(Flag::CapabilitiesPresent,capabilities_present).flag(Flag::IsV3Present,true));
-        for (stage,path,method,message) in [(Stage::Player,"mediaplayer","player_get_play_status",json!({})),(Stage::Sleep,"nightmode","status",json!({})),(Stage::Bluetooth,"mibt","status",json!({"btmode":"classic"}))] {
-            let result=self.request_inner(main,"/remote/ubus",Some(&target),Some(vec![("deviceId",target.id.clone()),("path",path.into()),("method",method.into()),("message",message.to_string())]),false).await.and_then(|value|parse_ubus(&value));
+        for (stage,path,method,message) in [(Stage::Player,"mediaplayer","player_get_play_status",json!({"media":"app_ios"})),(Stage::Sleep,"nightmode","status",json!({})),(Stage::Bluetooth,"mibt","status",json!({"btmode":"classic"}))] {
+            let result=if stage==Stage::Player {
+                self.player_value(main,&target).await
+            } else {
+                self.request_inner(main,"/remote/ubus",Some(&target),Some(vec![("deviceId",target.id.clone()),("path",path.into()),("method",method.into()),("message",message.to_string())]),false).await.and_then(|value|parse_ubus(&value))
+            };
             let step=match result {
                 Err(error)=>Step::new(stage,code(&error)),
                 Ok(value)=>match stage {
@@ -454,14 +471,13 @@ impl Service {
         parse_ubus(&data)?;
         for &delay in command.confirmation_delays() {
             tokio::time::sleep(Duration::from_millis(delay)).await;
-            let read=self.request_inner(main,"/remote/ubus",Some(target),Some(send("mediaplayer","player_get_play_status",json!({}))),false).await;
-            if let Ok(after)=read.and_then(|value|parse_ubus(&value)).and_then(|value|parse_player(&value)) {
+            let read=self.player_value(main,target).await.and_then(|value|parse_player(&value));
+            if let Ok(after)=read {
                 if command.confirmed(before,&after){
                     // A probe must also observe a stable result: an accepted
                     // delayed change must not be mistaken for a completed restore.
                     tokio::time::sleep(Duration::from_secs(3)).await;
-                    let stable=self.request_inner(main,"/remote/ubus",Some(target),Some(send("mediaplayer","player_get_play_status",json!({}))),false).await
-                        .and_then(|value|parse_ubus(&value)).and_then(|value|parse_player(&value))?;
+                    let stable=self.player_value(main,target).await.and_then(|value|parse_player(&value))?;
                     return if command.confirmed(before,&stable){Ok(stable)}else{Err("UNCERTAIN: 循环模式未稳定回读确认".into())};
                 }
             }
@@ -830,7 +846,7 @@ mod tests {
                     let method=&fields["method"];calls.push(method.clone());
                     match method.as_str() {
                         "player_get_play_status"=>{
-                            assert_eq!(fields["path"],"mediaplayer");assert_eq!(serde_json::from_str::<Value>(&fields["message"]).unwrap(),json!({}));
+                            assert_eq!(fields["path"],"mediaplayer");assert_eq!(serde_json::from_str::<Value>(&fields["message"]).unwrap(),json!({"media":"app_ios"}));
                             json!({"code":0,"info":json!({"status":1,"volume":47,"loop_type":1,"play_song_detail":{"title":"fixture song","artist":"fixture artist","duration":120000,"position":30000}}).to_string()})
                         },
                         "status"=>{assert!(matches!(fields["path"].as_str(),"nightmode"|"mibt"));json!({"code":-1})},

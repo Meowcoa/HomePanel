@@ -215,10 +215,11 @@ fn exercise_http(scenario: HttpScenario) -> Snapshot {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     listener.set_nonblocking(true).unwrap();
     let address = listener.local_addr().unwrap();
+    let expected_requests = if matches!(scenario, HttpScenario::PlayerFailureBluetooth) { 7 } else { 6 };
     let server = std::thread::spawn(move || {
         let deadline = Instant::now() + Duration::from_secs(8);
         let mut requests = 0; let mut writes = 0;
-        while requests < 6 && Instant::now() < deadline {
+        while requests < expected_requests && Instant::now() < deadline {
             let (mut stream, _) = match listener.accept() {
                 Ok(pair) => pair,
                 Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
@@ -254,7 +255,7 @@ fn exercise_http(scenario: HttpScenario) -> Snapshot {
                 let message: Value = serde_json::from_str(&fields["message"]).unwrap();
                 match (fields["path"].as_str(), fields["method"].as_str()) {
                     ("mediaplayer", "player_get_play_status") => {
-                        assert_eq!(message, json!({}));
+                        assert!(matches!(message["media"].as_str(), Some("app_ios"|"app_android")));
                         if matches!(scenario, HttpScenario::PlayerFailureBluetooth) {
                             json!({"code":-1})
                         } else {
@@ -294,7 +295,7 @@ fn exercise_http(scenario: HttpScenario) -> Snapshot {
             write!(stream, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", response.len()).unwrap();
             stream.write_all(&response).unwrap();
         }
-        assert_eq!(requests, 6); assert_eq!(writes, 1);
+        assert_eq!(requests, expected_requests); assert_eq!(writes, 1);
     });
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
     let root = std::env::temp_dir().join(format!("homepanel-speaker-regression-{}-{}", std::process::id(), address.port()));
