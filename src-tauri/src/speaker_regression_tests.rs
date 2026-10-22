@@ -1,5 +1,6 @@
 //! Protocol regressions use only synthetic identities and loopback transport.
 use super::*;
+use std::io::BufRead;
 
 fn device() -> Device {
     Device {
@@ -197,8 +198,20 @@ fn only_explicit_play_of_an_empty_idle_queue_uses_the_fixed_start_music_payload(
 #[derive(Clone, Copy)]
 enum HttpScenario { PlayerFailureBluetooth, IdlePlay, ResumePlay }
 
+fn read_line_before(reader: &mut std::io::BufReader<std::net::TcpStream>, line: &mut String, deadline: std::time::Instant) {
+    loop {
+        match reader.read_line(line) {
+            Ok(0) => panic!("speaker HTTP fixture request ended before its headers"),
+            Ok(_) => return,
+            Err(error) if matches!(error.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut)
+                && std::time::Instant::now() < deadline => std::thread::sleep(Duration::from_millis(5)),
+            Err(error) => panic!("speaker HTTP fixture could not read request headers: {error}"),
+        }
+    }
+}
+
 fn exercise_http(scenario: HttpScenario) -> Snapshot {
-    use std::{io::{BufRead, BufReader, Read, Write}, net::TcpListener, time::Instant};
+    use std::{io::{BufReader, Read, Write}, net::TcpListener, time::Instant};
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     listener.set_nonblocking(true).unwrap();
     let address = listener.local_addr().unwrap();
@@ -215,10 +228,11 @@ fn exercise_http(scenario: HttpScenario) -> Snapshot {
             };
             stream.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
             let mut reader = BufReader::new(stream.try_clone().unwrap());
-            let mut first = String::new(); reader.read_line(&mut first).unwrap();
+            let request_deadline = Instant::now() + Duration::from_secs(8);
+            let mut first = String::new(); read_line_before(&mut reader,&mut first,request_deadline);
             let mut length = 0; let mut cookie = String::new();
             loop {
-                let mut line = String::new(); reader.read_line(&mut line).unwrap();
+                let mut line = String::new(); read_line_before(&mut reader,&mut line,request_deadline);
                 if line == "\r\n" { break; } assert!(!line.is_empty());
                 let (key, value) = line.split_once(':').unwrap();
                 if key.eq_ignore_ascii_case("content-length") { length = value.trim().parse::<usize>().unwrap(); }
