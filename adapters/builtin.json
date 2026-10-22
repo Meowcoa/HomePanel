@@ -1,0 +1,46 @@
+[
+  {
+    "schemaVersion": 1, "id": "homepanel-outlet", "version": 1,
+    "name": "插座与排插", "license": "MIT", "source": "HomePanel original panel",
+    "matches": { "deviceTypes": ["outlet", "power-strip"] },
+    "sections": [
+      { "page": "controls", "title": "快捷开关", "style": "controls", "properties": [{"key":"on"}] },
+      { "page": "controls", "title": "用电读数", "style": "readings", "properties": [{"key":"electric-power"},{"key":"power-consumption"},{"key":"voltage"},{"key":"electric-current"}] }
+    ]
+  },
+  {
+    "schemaVersion": 1, "id": "homepanel-light", "version": 1,
+    "name": "灯光", "license": "MIT", "source": "HomePanel original panel",
+    "matches": { "deviceTypes": ["light", "ceiling-light"] },
+    "sections": [
+      { "page": "controls", "title": "灯光调节", "style": "controls", "properties": [{"key":"on"},{"key":"brightness"},{"key":"color-temperature"},{"key":"mode"}] }
+    ]
+  },
+  {
+    "schemaVersion": 1, "id": "homepanel-climate", "version": 1,
+    "name": "空调", "license": "MIT", "source": "HomePanel original panel",
+    "matches": { "deviceTypes": ["air-conditioner"] },
+    "sections": [
+      { "page": "controls", "title": "温度与模式", "style": "controls", "properties": [{"key":"on"},{"key":"target-temperature"},{"key":"mode"}] },
+      { "page": "controls", "title": "送风", "style": "controls", "properties": [{"key":"fan-level"},{"key":"horizontal-swing"},{"key":"vertical-swing"}] },
+      { "page": "controls", "title": "室内环境", "style": "readings", "properties": [{"key":"temperature"},{"key":"relative-humidity"}] }
+    ]
+  },
+  {
+    "schemaVersion": 1, "id": "homepanel-sensor", "version": 1,
+    "name": "温湿度传感器", "license": "MIT", "source": "HomePanel original panel",
+    "matches": { "deviceTypes": ["temperature-humidity-sensor", "temperature-sensor", "humidity-sensor"] },
+    "sections": [
+      { "page": "controls", "title": "环境读数", "style": "readings", "properties": [{"key":"temperature"},{"key":"relative-humidity"},{"key":"battery-level"}] }
+    ]
+  },
+  {
+    "schemaVersion": 1, "id": "homepanel-fan", "version": 1,
+    "name": "风扇", "license": "MIT", "source": "HomePanel original panel",
+    "matches": { "deviceTypes": ["fan"] },
+    "sections": [
+      { "page": "controls", "title": "风量与模式", "style": "controls", "properties": [{"key":"on"},{"key":"fan-level"},{"key":"speed-level"},{"key":"mode"}] },
+      { "page": "controls", "title": "摆风", "style": "controls", "properties": [{"key":"horizontal-swing"},{"key":"vertical-swing"}] }
+    ]
+  }
+]

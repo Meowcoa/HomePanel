@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "homepanel-chuangmi-plug-212a01",
+  "version": 1,
+  "name": "米家智能插座 · 独立适配",
+  "license": "MIT",
+  "source": "HomePanel original layout using public MIoT property keys; hardware unverified",
+  "matches": { "models": ["chuangmi.plug.212a01"] },
+  "sections": [
+    { "page": "controls", "title": "插座开关", "style": "controls", "properties": [{"key":"on","serviceKey":"outlet"}] },
+    { "page": "controls", "title": "用电读数", "style": "readings", "properties": [{"key":"electric-power"},{"key":"power-consumption"},{"key":"voltage"},{"key":"electric-current"}] },
+    { "page": "settings", "title": "来电与记忆", "style": "controls", "properties": [{"key":"default-power-on-state"},{"key":"power-on-state"},{"key":"power-loss-memory"}] },
+    { "page": "settings", "title": "指示灯", "style": "controls", "properties": [{"key":"on","serviceKey":"indicator-light"}] }
+  ]
+}

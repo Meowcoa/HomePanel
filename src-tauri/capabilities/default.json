@@ -1,0 +1,1 @@
+{"$schema":"../gen/schemas/desktop-schema.json","identifier":"default","description":"Local HomePanel windows. Cloud requests and credentials stay in Rust.","windows":["panel","detail"],"permissions":["core:default"]}

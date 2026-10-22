@@ -1,0 +1,24 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+release-output/
+/work/
+*.local
+.env*
+!.env.example
+*.log
+*.tsbuildinfo
+*.dpapi
+session*.json
+auth*.json
+mi-tokens.json
+mi-session.json
+.DS_Store
+
+# User-supplied local interoperability payloads are never source assets.
+**/LocalPlugin/
+**/local-plugin-v*/
+*.apk
+*.mpkg
+*.mpk

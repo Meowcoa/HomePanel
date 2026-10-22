@@ -1,0 +1,7 @@
+node_modules/
+windows/**/Bundle/
+windows/**/obj/
+windows/**/bin/
+windows/**/*.user
+index.windows.bundle
+host-self-test.json

@@ -1,0 +1,223 @@
+[
+  {
+    "license": "MIT",
+    "repository": "daviddwlee84/mihome-ctl",
+    "revision": "10deea0cf5aa147f7e28d2b4de2428c094ffdbaf",
+    "inspectedDate": "2026-10-18"
+  },
+  {
+    "license": "MIT",
+    "repository": "Yonsm/MiService",
+    "revision": "a1727f7817819cae89f20ea197c030aaa199b96d",
+    "inspectedDate": "2026-10-18"
+  },
+  {
+    "license": "MIT",
+    "repository": "PiotrMachowski/Xiaomi-cloud-tokens-extractor",
+    "revision": "c4db715dace9806e905153c2977608873e8ab7c9",
+    "inspectedDate": "2026-10-18"
+  },
+  {
+    "type": "visual-reference-only",
+    "project": "chthollyphile/folia-major",
+    "reference": "Folia Bravais official interface guide",
+    "url": "https://folia-site.vercel.app/guide/bravais",
+    "usage": "Layout and interaction inspiration only; no Folia code or artwork is included.",
+    "inspectedDate": "2026-10-18"
+  },
+  {
+    "type": "design-guidance-only",
+    "project": "Apple Liquid Glass",
+    "url": "https://developer.apple.com/videos/play/wwdc2025/219/",
+    "usage": "Material hierarchy, readable controls and limited highlights. No Apple code, artwork or framework is included.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "platform-documentation",
+    "project": "Microsoft DWM system backdrop",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwm_systembackdrop_type",
+    "usage": "DWMSBT_TRANSIENTWINDOW provides desktop acrylic on supported Windows versions.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "public-metadata-api",
+    "project": "MIoT Chinese instance labels",
+    "url": "https://miot-spec.org/instance/v2/multiLanguage?urn=urn:miot-spec-v2:device:outlet:0000A002:chuangmi-212a01:3",
+    "usage": "Runtime Chinese metadata fetched without account credentials; own parser. Enum keys refer to list indexes.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "hardware-measurement-facts",
+    "project": "chuangmi.plug.212a01 public SPEC",
+    "url": "https://miot-spec.org/miot-spec-v2/instance?type=urn:miot-spec-v2:device:outlet:0000A002:chuangmi-212a01:3",
+    "usage": "Exact family versions 1-3, service 5 properties 1/2/3/6; power comment says 0.01 W. No SDK code used.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "hardware-measurement-facts",
+    "project": "Public energy-unit correction report",
+    "url": "https://github.com/XiaoMi/ha_xiaomi_home/pull/910",
+    "usage": "PR explanation identifies mWh units for 212a01. HomePanel converts to Wh only; does not extrapolate hourly consumption. No SDK code or configuration copied.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "hardware-measurement-facts",
+    "project": "Community 212a01 current and voltage observations",
+    "url": "https://github.com/al-one/hass-xiaomi-miot/blob/master/custom_components/xiaomi_miot/core/device_customizes.py",
+    "usage": "Missing current mA and voltage V hardware facts only; no upstream source or configuration copied. Conflicting generic energy multiplier was not used.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "protocol-behavior-research",
+    "project": "User-provided Mi Home Android APK 11.7.709",
+    "package": "com.xiaomi.smarthome",
+    "versionCode": 110717091,
+    "sha256": "73335d3c17dff3e73097db7e2f86a373b7eb2c67611dc82749883ab2da3f0b6e",
+    "usage": "Observed nested MIoT property-set codes 0 and 1 as accepted; independently implemented strict target matching and fresh readback. No APK code, SDK, artwork or model database redistributed. Publisher signature not authenticated.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "public-protocol-documentation",
+    "project": "MiEcosystem MIoT property datasource documentation",
+    "url": "https://github.com/MiEcosystem/miot-plugin-sdk/blob/a48234baf2f3e7faba09c6c7bd18efe7197841bf/miot-sdk/service/spec.js",
+    "usage": "API comments document datasource 2 as direct RPC and datasource 3 as cache-only. Used for state polling, explicit cache fallback and write confirmation; no SDK code linked or copied.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "public-device-type-facts",
+    "project": "MIoT standard device types",
+    "url": "https://miot-spec.org/miot-spec-v2/instances?status=all",
+    "usage": "Public device URNs classify mosquito-dispeller, outlet and speaker. Original vector artwork; no APK catalog redistributed and no capabilities inferred from artwork.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "public-device-protocol-facts",
+    "project": "MIoT speaker playback and no-disturb schedule",
+    "url": "https://miot-spec.org/miot-spec-v2/instance?type=urn:miot-spec-v2:device:speaker:0000A015:xiaomi-oh2:1",
+    "usage": "Read/write and notify permissions, named playback enum values, zero-input transport actions and enable-time-period HH:MM:SS-HH:MM:SS contract. Original native panel; no SDK/plugin code or assets copied.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "public-device-protocol-facts",
+    "project": "MIoT speaker capability differences",
+    "url": "https://miot-spec.org/miot-spec-v2/instance?type=urn:miot-spec-v2:device:speaker:0000A015:xiaomi-lx06:2",
+    "usage": "Playback state is notify-only for this SPEC; no polling/read capability is invented. Buttons and state display depend on actual SPEC.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "public-api-capability-research",
+    "project": "MIoT scenes and phone-host boundaries",
+    "url": "https://github.com/MiEcosystem/miot-plugin-sdk/blob/a48234baf2f3e7faba09c6c7bd18efe7197841bf/miot-sdk/service/scene.js",
+    "usage": "Documentation facts only: distinguish legacy scenes from GetSceneList v2 and phone-native bridge dependencies. No scene API was enabled or called; no SDK implementation copied. Inventory recorded in MIJIA_API_COVERAGE.md.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "dependency",
+    "project": "zip-rs zip",
+    "version": "4.6.1",
+    "license": "MIT",
+    "url": "https://crates.io/crates/zip/4.6.1",
+    "usage": "Local archive inspection only; no plugin execution. Complete license retained in LICENSES/zip-MIT.txt.",
+    "inspectedDate": "2026-10-19"
+  },
+  {
+    "type": "experimental-development-reference",
+    "project": "React Native Windows",
+    "version": "0.79.5",
+    "url": "https://microsoft.github.io/react-native-windows/v1/docs/0.79/new-architecture",
+    "usage": "Separate Win32 Composition development host: native C++ build and original-screen window/layout/promise/event self-tests succeeded. Scoped Rust stdio broker read/write/readback and polling subscription tested with explicit fixtures only; no official plugin executed. Not included in the product runtime.",
+    "inspectedDate": "2026-10-20"
+  },
+  {
+    "type": "public-api-contract-reference",
+    "project": "MIoT SPEC plugin documentation",
+    "url": "https://github.com/MiEcosystem/miot-plugin-sdk/blob/a48234baf2f3e7faba09c6c7bd18efe7197841bf/miot-sdk/service/spec.js",
+    "usage": "Interface facts only: get/set property and datasource semantics. No SDK implementation copied; new broker uses its own scoped protocol and does not claim MIOTSpec ABI compatibility.",
+    "inspectedDate": "2026-10-20"
+  },
+  {
+    "name": "Xiaomi Speaker APK 3.0.0 interoperability facts",
+    "sha256": "4e74794b9074817909867b4a346b4ab4db2ef62e87eef4a25da87f567168fdfc",
+    "date": "2026-10-20",
+    "scope": "Protocol facts only: micoapi authorization, device_list exact miotDID binding, UBUS nested code/info, player enums 0 stop 1 play 2 pause, position milliseconds. No APK/decompiled code/assets/keys redistributed. No real-device test."
+  },
+  {
+    "type": "protocol-fact-reference",
+    "repository": "Yonsm/MiService",
+    "revision": "a1727f7817819cae89f20ea197c030aaa199b96d",
+    "path": "miservice/miaccount.py#_securityTokenService",
+    "license": "MIT",
+    "inspectedDate": "2026-10-20",
+    "scope": "STS clientSign = Base64(SHA1(nonce=<exact nonce>&<same-login ssecurity>)), URL-encoded; independently implemented in cloud.rs. QR/mobile/hardware success not claimed."
+  },
+  {
+    "type": "static-protocol-schema",
+    "source": "Xiaomi Speaker APK 3.0.0",
+    "sha256": "4e74794b9074817909867b4a346b4ab4db2ef62e87eef4a25da87f567168fdfc",
+    "classes": [
+      "DeviceListResponseV3",
+      "MinaResponse",
+      "BaseResponse"
+    ],
+    "scope": "deviceList vs groupInfo; code/status and data/result aliases. Protocol facts only, independently implemented and tested with synthetic local HTTP responses. No real-account response exported.",
+    "inspectedDate": "2026-10-20"
+  },
+  {
+    "type": "public-capability-check",
+    "url": "https://miot-spec.org/miot-spec-v2/instances?status=all",
+    "models": [
+      "xiaomi.wifispeaker.l05b",
+      "xiaomi.wifispeaker.l05c",
+      "xiaomi.wifispeaker.x10a",
+      "xiaomi.wifispeaker.l15a",
+      "xiaomi.wifispeaker.lx04",
+      "xiaomi.wifispeaker.lx06"
+    ],
+    "scope": "Latest public SPEC samples inspected: loop modes may declare only Single Cycle or omit the property; no Bluetooth write property in these samples. Does not identify or certify the user device. No private account queries or device writes.",
+    "inspectedDate": "2026-10-20"
+  },
+  {
+    "type": "static-protocol-contract",
+    "source": "Xiaomi Speaker APK 3.0.0",
+    "sha256": "4e74794b9074817909867b4a346b4ab4db2ef62e87eef4a25da87f567168fdfc",
+    "inspectedDate": "2026-10-20",
+    "scope": "Phone loop 0-3 and seek milliseconds; QuickToggle sleep uses positive night_mode/night_mode_v2; Bluetooth quick toggle reads connect==1 (not radio enable) and writes classic/connect/discover. Selected hardware and group identity field facts only, independently implemented. No APK code or complete model database redistributed. Synthetic HTTP validation, no real-device writes.",
+    "classes": [
+      "QuickToggleCard",
+      "MicoCapability",
+      "HardwareLocalConfig",
+      "DevicePollingProviderImpl",
+      "Admin.DeviceGroupInfo",
+      "Admin.DeviceGroupInfo.SlaveDeviceInfo"
+    ]
+  },
+  {
+    "type": "static-protocol-correction",
+    "source": "User-provided Xiaomi Speaker APK 3.0.0",
+    "sha256": "4e74794b9074817909867b4a346b4ab4db2ef62e87eef4a25da87f567168fdfc",
+    "inspectedDate": "2026-10-20",
+    "scope": "DeviceCookieSnapshot derives isV3Protocol 1/0 from capabilities.ai_protocol_3_0; hardware resolution and Mina presence ignore case; playback IDs are audio_id and serialized global_id. Phone IDLE fallback mibrain/ai_service starts music with fixed nlp/tts flags only on explicit play. Independently authored native implementation and synthetic HTTP tests. No decompiled code, private signing key, complete model database or account response redistributed.",
+    "classes": [
+      "DeviceCookieSnapshot.Companion",
+      "Admin.Mico",
+      "MicoCapability",
+      "PlayerControllerSession",
+      "PlayingData"
+    ]
+  },
+  {
+    "type": "model-plugin-download-protocol",
+    "source": "User-provided Mi Home 11.7.709 APK and authenticated directory query",
+    "sha256": "73335d3c17dff3e73097db7e2f86a373b7eb2c67611dc82749883ab2da3f0b6e",
+    "inspectedDate": "2026-10-21",
+    "scope": "Independently implemented fetch_plugin latest_req api_version 10117, Android, empty package_type, backup api_level 111 phone, exact model selection, version/SDK/size/download URL fields. Two public-model downloads verified length and ZIP CRC. Exact iot-cdn.io.mi.com origin from the authenticated service response; credential-free HTTPS download without redirects. Local SHA256 is integrity only; separate RN X509/ECDSA publisher verification remains unimplemented and downloaded packages cannot execute.",
+    "publicRequestReference": "https://github.com/al-one/hass-xiaomi-miot/blob/master/README.md#xiaomi_miotrequest_xiaomi_api",
+    "classes": [
+      "nwb.o00o0O",
+      "ae4.parse",
+      "PluginPackageConstant",
+      "d98.OooOO0O",
+      "vj9.Oooo0oO"
+    ]
+  }
+]

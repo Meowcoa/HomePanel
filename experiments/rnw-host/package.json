@@ -1,0 +1,28 @@
+{
+  "name": "homepanel-plugin-host-experiment",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "react": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-svg": "15.12.1",
+    "react-native-windows": "0.79.5"
+  },
+  "devDependencies": {
+    "@react-native-community/cli": "18.0.0",
+    "@react-native/metro-config": "0.79.5",
+    "@react-native/babel-preset": "0.79.5",
+    "@rnx-kit/jest-preset": "^0.1.17"
+  },
+  "scripts": {
+    "windows": "npx @react-native-community/cli run-windows",
+    "test:windows": "jest --config jest.config.windows.js"
+  },
+  "react-native-windows": {
+    "init-windows": {
+      "name": "HomePanelPluginHost",
+      "namespace": "HomePanelPluginHost",
+      "template": "cpp-app"
+    }
+  }
+}

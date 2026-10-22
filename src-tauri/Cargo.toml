@@ -1,0 +1,35 @@
+[package]
+name = "homepanel"
+version = "0.4.11"
+description = "A lightweight native Windows tray controller for MIoT devices"
+authors = ["HomePanel contributors"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.88"
+
+[dependencies]
+eframe = { version = "0.33.3", default-features = false, features = ["default_fonts", "glow"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
+raw-window-handle = "0.6"
+tray-icon = { version = "0.25.1", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["sync", "time", "fs", "rt-multi-thread"] }
+reqwest = { version = "0.12", default-features = false, features = ["native-tls", "cookies", "json"] }
+base64 = "0.22"
+sha1 = "0.10"
+sha2 = "0.10"
+rand = "0.8"
+zeroize = { version = "1", features = ["derive"] }
+url = "2"
+zip = { version = "4.6.1", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55"
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Graphics_Dwm", "Win32_Graphics_Gdi", "Win32_Security_Cryptography", "Win32_UI_Accessibility", "Win32_UI_Controls_Dialogs", "Win32_UI_WindowsAndMessaging", "Win32_System_Memory", "Win32_System_LibraryLoader", "Win32_System_Threading", "Win32_System_Diagnostics_ToolHelp"] }
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 1
+panic = "abort"

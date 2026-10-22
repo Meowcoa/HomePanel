@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-20",
+  "host": {
+    "rnWindows": "0.79.5",
+    "reactNative": "0.79.5",
+    "react": "19.0.0",
+    "nativeWindowTestPassed": true,
+    "originalScreenTestPassed": true,
+    "scopedBrokerFixtureTestPassed": true,
+    "realDeviceBridgeTested": false,
+    "hermesBytecodeVersion": 96,
+    "includedInProductRuntime": true,
+    "nativeSvgBuildPassed": true,
+    "legacySvgAdapterPassed": true,
+    "windowsSafeAreaAdapterPassed": true,
+    "officialPluginFixtureSdkRoundTripPassed": true,
+    "officialPluginPixelInspectionPassed": false,
+    "officialButtonPressTested": false,
+    "integrationStatus": "optional installed component; on-demand launch"
+  },
+  "phoneSample": {
+    "bundledRnMetadata": "0.61.0",
+    "metadataDoesNotProveAllPluginVersions": true,
+    "miniPluginBytecodeVersion": 89
+  },
+  "officialCandidates": [
+    {
+      "file": "miot.clock.mijia.zip",
+      "package": "com.smarthome.spec.scene",
+      "version": "1.1.8",
+      "sdkApiLevel": 10108,
+      "format": "indexed-ram",
+      "sha256": "51043010a1ce2c45dfe20df3bf8a04a07959caa3f5391c139f56be827fe587eb",
+      "staticInspectionPassed": true,
+      "executionAttempted": false,
+      "realDeviceTested": false,
+      "availableInProduct": false
+    },
+    {
+      "file": "miot.switch.spec.zip",
+      "package": "miot.plugin.spec",
+      "version": "1.1.10",
+      "sdkApiLevel": 10110,
+      "format": "javascript",
+      "sha256": "0a0fa3b0a5889db5237b4649d6d9bc53d86276c33f85a701629d0822b8f412e1",
+      "staticInspectionPassed": true,
+      "executionAttempted": true,
+      "realDeviceTested": false,
+      "availableInProduct": true,
+      "reactMountStable": true,
+      "fixtureSdkRoundTripPassed": true,
+      "officialButtonPressTested": false,
+      "resourceResolutionVerified": false,
+      "availability": "user-supplied exact package only; beta single-channel outlet",
+      "resourceNameMappingUnitTested": true
+    },
+    {
+      "file": "xiaomi.router.rmo15.zip",
+      "package": "com.xiaomi.routerinitial",
+      "version": "1.1.9",
+      "sdkApiLevel": 10109,
+      "format": "indexed-ram",
+      "sha256": "e5ccbe18770a9cb8919d6c0c0a8cb8af84911a3f4f9daac2d1cbd951c62cbb36",
+      "staticInspectionPassed": true,
+      "executionAttempted": false,
+      "realDeviceTested": false,
+      "availableInProduct": false
+    }
+  ],
+  "blockers": [
+    "Only a subset of phone APIs and native controls is implemented; unsupported calls reject.",
+    "Image/resource resolution, visual output and official button interaction are not verified.",
+    "Real device operation and third-party manufacturer plugins have not been tested.",
+    "The two indexed RAM bundle candidates have not been executed.",
+    "Hermes 89 bytecode cannot be loaded by the current Hermes 96 runtime.",
+    "Publisher signature, automatic-download protocol and redistribution permission remain unverified."
+  ],
+  "automaticDownloadEnabled": false,
+  "officialPluginExecutionVerified": true,
+  "verificationScope": "Exact local plain bundle; fixture SDK round trip and stable mount; installer includes host only; no real-device, pixel or vendor certification"
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "HomePanel",
+  "version": "0.1.1",
+  "identifier": "io.github.meowcoa.homepanel",
+  "build": { "beforeDevCommand": "npm run dev", "devUrl": "http://127.0.0.1:1420", "beforeBuildCommand": "npm run build && npm run licenses", "frontendDist": "../dist" },
+  "app": {
+    "windows": [],
+    "security": { "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data:; connect-src ipc: http://ipc.localhost; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'" }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico"],
+    "shortDescription": "托盘里的智能家居控制面板",
+    "longDescription": "独立开源客户端，提供 MIoT 设备状态与日常控制。非小米官方软件。",
+    "licenseFile": "../LICENSE",
+    "resources": { "../THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md", "../LICENSES/": "LICENSES/" },
+    "windows": { "webviewInstallMode": { "type": "embedBootstrapper", "silent": true }, "nsis": { "installMode": "currentUser", "languages": ["SimpChinese", "English"], "displayLanguageSelector": false, "startMenuFolder": "HomePanel" } }
+  }
+}

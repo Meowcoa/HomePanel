@@ -1,0 +1,8 @@
+{
+  "solution": {
+    "path": "HomePanelPluginHost.sln",
+    "projects": [
+      "HomePanelPluginHost\\HomePanelPluginHost.vcxproj"
+    ]
+  }
+}
