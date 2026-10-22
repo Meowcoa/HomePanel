@@ -18,7 +18,7 @@ jobs:
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/../../work/cargo-target
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Resolve application version
@@ -58,7 +58,7 @@ jobs:
           if (-not (Test-Path -LiteralPath (Join-Path $nsisRoot 'makensis.exe'))) { throw 'makensis.exe is missing from the NSIS archive.' }
           "NSISDIR=$nsisRoot" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8
           "$nsisRoot" | Add-Content -LiteralPath $env:GITHUB_PATH -Encoding utf8
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: inputs.include_plugin_host == true
         with:
           node-version: 22
@@ -96,7 +96,10 @@ jobs:
           $exe = Join-Path $workspaceRoot "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel.exe"
           .\scripts\Build-Installer.ps1 -Version $env:HOME_PANEL_VERSION -WorkspaceRoot $workspaceRoot -ReleaseExe $exe -TestMode -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
           $installer = Join-Path $workspaceRoot "work\HomePanel-release-$env:HOME_PANEL_VERSION\HomePanel-Setup-$env:HOME_PANEL_VERSION-test.exe"
-          .\scripts\Test-Installer.ps1 -InstallerPath $installer -ReleaseExe $exe -WorkspaceRoot $workspaceRoot -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
+          # Hosted Windows runners do not provide the interactive desktop
+          # needed by the tray lifecycle probe; the local interactive test
+          # remains available by omitting -SkipTrayLifecycle.
+          .\scripts\Test-Installer.ps1 -InstallerPath $installer -ReleaseExe $exe -WorkspaceRoot $workspaceRoot -SkipTrayLifecycle -PluginHostDirectory $env:HOME_PANEL_HOST_PAYLOAD
       - name: Checksums
         shell: pwsh
         run: |
@@ -111,7 +114,7 @@ jobs:
             Copy-Item -LiteralPath $_.FullName -Destination $artifactDirectory
             $checksum | Set-Content -LiteralPath (Join-Path $artifactDirectory ($_.Name + '.sha256')) -Encoding utf8NoBOM
           }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: HomePanel-Windows-x64
           path: ${{ github.workspace }}/release-output/*
@@ -123,8 +126,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: HomePanel-Windows-x64
           path: release-files

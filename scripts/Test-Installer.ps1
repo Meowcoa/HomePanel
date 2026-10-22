@@ -2,6 +2,7 @@ param(
     [Parameter(Mandatory)][string]$InstallerPath,
     [Parameter(Mandatory)][string]$ReleaseExe,
     [Parameter(Mandatory)][string]$WorkspaceRoot,
+    [switch]$SkipTrayLifecycle,
     [string]$PluginHostDirectory
 )
 
@@ -46,7 +47,7 @@ New-Item -ItemType Directory -Path $taskForeignDir | Out-Null
 $taskForeignApp = Join-Path $taskForeignDir 'HomePanel.exe'
 Copy-Item -LiteralPath $taskFixtureExe -Destination $taskForeignApp
 $taskLifecycleExe = Join-Path $taskWorkspace 'work\cargo-target\debug\homepanel.exe'
-if (-not (Test-Path -LiteralPath $taskLifecycleExe)) { throw 'Build the current Debug app for isolated tray upgrade checks.' }
+if (-not $SkipTrayLifecycle -and -not (Test-Path -LiteralPath $taskLifecycleExe)) { throw 'Build the current Debug app for isolated tray upgrade checks.' }
 
 function Invoke-TestProcess([string]$File, [string[]]$Arguments, [int]$ExpectedExit) {
     $taskChild = Start-Process -FilePath $File -ArgumentList $Arguments -WindowStyle Hidden -PassThru
@@ -121,20 +122,24 @@ try {
         $taskResults.Add(@{ case=$taskPhase; passed=$true })
     }
 
-    # A synthetic Debug tray app exercises the real exit handler without
-    # opening the user's sessions or contending with the production singleton.
-    Copy-Item -LiteralPath $taskLifecycleExe -Destination $taskApp -Force
-    Start-IsolatedTray
-    Invoke-TestProcess $taskReleaseExe @('--close-for-update',('"'+$taskApp+'"')) 0
-    if(-not $taskFixture.WaitForExit(3000)){throw 'Graceful update signal did not close the hidden tray app.'}
-    $taskFixture=$null
-    $taskResults.Add(@{case='hidden tray app exits gracefully without termination fallback';passed=$true})
-    Start-IsolatedTray
-    Invoke-TestProcess $taskInstaller @('/S', "/D=$taskInstallDir") 0
-    if(-not $taskFixture.WaitForExit(3000)){throw 'Installer did not automatically exit the hidden tray app.'}
-    $taskFixture=$null
-    if((Get-FileHash -LiteralPath $taskApp -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $taskReleaseExe -Algorithm SHA256).Hash){throw 'Hidden tray upgrade did not replace the binary.'}
-    $taskResults.Add(@{case='installer automatically exits hidden tray app before upgrade';passed=$true})
+    if ($SkipTrayLifecycle) {
+        Write-Output 'Tray lifecycle checks skipped: this runner has no interactive desktop. Run without -SkipTrayLifecycle on an interactive Windows desktop.'
+    } else {
+        # A synthetic Debug tray app exercises the real exit handler without
+        # opening the user's sessions or contending with the production singleton.
+        Copy-Item -LiteralPath $taskLifecycleExe -Destination $taskApp -Force
+        Start-IsolatedTray
+        Invoke-TestProcess $taskReleaseExe @('--close-for-update',('"'+$taskApp+'"')) 0
+        if(-not $taskFixture.WaitForExit(3000)){throw 'Graceful update signal did not close the hidden tray app.'}
+        $taskFixture=$null
+        $taskResults.Add(@{case='hidden tray app exits gracefully without termination fallback';passed=$true})
+        Start-IsolatedTray
+        Invoke-TestProcess $taskInstaller @('/S', "/D=$taskInstallDir") 0
+        if(-not $taskFixture.WaitForExit(3000)){throw 'Installer did not automatically exit the hidden tray app.'}
+        $taskFixture=$null
+        if((Get-FileHash -LiteralPath $taskApp -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $taskReleaseExe -Algorithm SHA256).Hash){throw 'Hidden tray upgrade did not replace the binary.'}
+        $taskResults.Add(@{case='installer automatically exits hidden tray app before upgrade';passed=$true})
+    }
 
     if ($PluginHostDirectory) {
         $taskManifest=Get-Content -LiteralPath (Join-Path $PluginHostDirectory 'runtime-manifest.json') -Encoding utf8 -Raw | ConvertFrom-Json
